@@ -1,6 +1,6 @@
 export function numberToColor(num) {
     switch (num) {
-        case 2: return "#249cd1";
+        case 2: return "#00FFFF"; // "#249cd1";
         case 4: return "#ec893b";
         case 8: return "#e35b89";
         case 16: return "#af4e7a";
