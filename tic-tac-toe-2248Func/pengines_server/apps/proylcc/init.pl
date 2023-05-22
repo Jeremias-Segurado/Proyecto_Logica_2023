@@ -1,4 +1,4 @@
-:- module(init, [ init/2 ]).
+n  :- module(init, [ init/2 ]).
 
 /**
  * init(-Grid, -NumOfColumns).
