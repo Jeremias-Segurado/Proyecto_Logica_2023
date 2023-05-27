@@ -43,6 +43,7 @@ function Game() {
     }
     setPath(newPath);
     console.log(JSON.stringify(newPath));
+    //todo: setprediction
   }
 
   /**
@@ -91,7 +92,7 @@ function Game() {
     if (restRGrids.length > 0) {
       setTimeout(() => {
         animateEffect(restRGrids);
-      }, 1000);
+      }, 100);
     } else {
       setWaiting(false);
     }
