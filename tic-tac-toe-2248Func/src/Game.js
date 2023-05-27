@@ -13,6 +13,9 @@ function Game() {
   const [score, setScore] = useState(0);
   const [path, setPath] = useState([]);
   const [waiting, setWaiting] = useState(false);
+  const [toGenerate, setValue] = useState(0);
+  const [pathingInProgress, setPathingInProgressValue] = useState(false);
+  const [boostedClicked, isClicked] = useState(false);
 
   useEffect(() => {
     // This is executed just once, after the first render.
@@ -41,9 +44,23 @@ function Game() {
     if (waiting) {
       return;
     }
+    if (newPath.length > 1){
+      const pathS = JSON.stringify(newPath);
+      const gridS = JSON.stringify(grid);
+      const numOfColumnsS = JSON.stringify(numOfColumns);
+      const queryS = "ver_siguiente_bloque_SHELL(" + gridS + "," + pathS + "," + numOfColumnsS + ", BloqueResultado)";
+      pengine.query(queryS, (success, response) => {
+        if (success) {
+          setValue(response['BloqueResultado']);
+        }
+      });
+    }
+    else{
+      setValue(0);
+    }
     setPath(newPath);
     console.log(JSON.stringify(newPath));
-    //todo: setprediction
+    setPathingInProgressValue(true);
   }
 
   /**
@@ -80,6 +97,7 @@ function Game() {
         setWaiting(false);
       }
     });
+    setPathingInProgressValue(false);
   }
 
   /**
@@ -104,7 +122,11 @@ function Game() {
   return (
     <div className="game">
       <div className="header">
+      {pathingInProgress ? (
+        <div className = "toGenerate">{toGenerate}</div>
+      ) : (
         <div className="score">{score}</div>
+      )}
       </div>
       <Board
         grid={grid}
