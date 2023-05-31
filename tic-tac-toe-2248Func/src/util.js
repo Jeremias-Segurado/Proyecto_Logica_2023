@@ -13,7 +13,7 @@ export function numberToColor(num) {
         case 2048: return "#f57171";
         case 4096: return "#0043fa";
         case 8192: return "e8ce9e";
-        default: return "red";
+        default: return "gold";
     }
 }
 

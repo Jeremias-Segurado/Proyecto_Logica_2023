@@ -1,6 +1,7 @@
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
   margin: 20px;
+  background-color: black;
 }
 
 .game {
@@ -18,8 +19,16 @@ body {
 }
 
 .score {
+  width: 70px;
+  height: 70px;
   margin: 10px;
   font-size: 25px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .board {
@@ -33,15 +42,137 @@ body {
   display: grid;  
 }
 
-.toGenerate {
+.generatedBlock {
+  width: 70px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 10px;
   font-size: 25px;
   border-radius: 5px;
-  color: black;
+  color: white;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.boostButton {
+  appearance: button;
+  background-color: #1899D6;
+  border: solid transparent;
+  border-radius: 16px;
+  border-width: 0 0 4px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: din-round,sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  line-height: 20px;
+  margin: 0;
+  outline: none;
+  overflow: visible;
+  padding: 13px 16px;
+  text-align: center;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  transform: translateZ(0);
+  transition: filter .2s;
+  user-select: none;
+  -webkit-user-select: none;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.boostButton:after {
+  background-clip: padding-box;
+  background-color: #1CB0F6;
+  border: solid transparent;
+  border-radius: 16px;
+  border-width: 0 0 4px;
+  bottom: -4px;
+  content: "";
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: -1;
+}
+
+.boostButton:main,
+.boostButton:focus {
+  user-select: auto;
+}
+
+.boostButton:hover:not(:disabled) {
+  filter: brightness(1.1);
+  -webkit-filter: brightness(1.1);
+}
+
+.boostButton:disabled {
+  cursor: auto;
+}
+
+.boostButtonDisabled {
+  appearance: button;
+  background-color: #bb2d20;
+  border: solid transparent;
+  border-radius: 16px;
+  border-width: 0 0 4px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: din-round,sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  line-height: 20px;
+  margin: 0;
+  outline: none;
+  overflow: visible;
+  padding: 13px 16px;
+  text-align: center;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  transform: translateZ(0);
+  transition: filter .2s;
+  user-select: none;
+  -webkit-user-select: none;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.boostButtonDisabled {
+  background-clip: padding-box;
+  background-color: #f64f1c;
+  border: solid transparent;
+  border-radius: 16px;
+  border-width: 0 0 4px;
+  bottom: -4px;
+  content: "";
+  left: 0;
+  position: relative;
+  right: 0;
+  top: 0;
+  z-index: -1;
+}
+
+.boostButtonDisabled:main,
+.boostButtonDisabled:focus {
+  user-select: auto;
+}
+
+.boostButtonDisabled:hover:not(:disabled) {
+  filter: brightness(1.1);
+  -webkit-filter: brightness(1.1);
+}
+
+.boostButtonDisabled:disabled {
+  cursor: auto;
 }
 
 .square {

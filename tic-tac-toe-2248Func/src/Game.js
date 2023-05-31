@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PengineClient from './PengineClient';
 import Board from './Board';
 import { joinResult } from './util';
+import Block from './Block';
 
 let pengine;
 
@@ -13,9 +14,8 @@ function Game() {
   const [score, setScore] = useState(0);
   const [path, setPath] = useState([]);
   const [waiting, setWaiting] = useState(false);
-  const [toGenerate, setValue] = useState(0);
-  const [pathingInProgress, setPathingInProgressValue] = useState(false);
-  const [boostedClicked, isClicked] = useState(false);
+  const [generatedBlock, setValue] = useState(0);
+  const pathingInProgress = path.length > 1;
 
   useEffect(() => {
     // This is executed just once, after the first render.
@@ -47,8 +47,7 @@ function Game() {
     if (newPath.length > 1){
       const pathS = JSON.stringify(newPath);
       const gridS = JSON.stringify(grid);
-      const numOfColumnsS = JSON.stringify(numOfColumns);
-      const queryS = "ver_siguiente_bloque_SHELL(" + gridS + "," + pathS + "," + numOfColumnsS + ", BloqueResultado)";
+      const queryS = "siguiente_bloque(" + gridS + "," + pathS + "," + numOfColumns + ", BloqueResultado)";
       pengine.query(queryS, (success, response) => {
         if (success) {
           setValue(response['BloqueResultado']);
@@ -60,7 +59,6 @@ function Game() {
     }
     setPath(newPath);
     console.log(JSON.stringify(newPath));
-    setPathingInProgressValue(true);
   }
 
   /**
@@ -97,7 +95,20 @@ function Game() {
         setWaiting(false);
       }
     });
-    setPathingInProgressValue(false);
+  }
+
+  function toBoost() {
+    const gridS = JSON.stringify(grid);
+    const queryS = "booster(" + gridS + "," + numOfColumns + ", RGrids)";
+    setWaiting(true);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        setPath([]);
+        animateEffect(response['RGrids']);
+      } else {
+        setWaiting(false);
+      }
+    });
   }
 
   /**
@@ -110,7 +121,7 @@ function Game() {
     if (restRGrids.length > 0) {
       setTimeout(() => {
         animateEffect(restRGrids);
-      }, 100);
+      }, 500);
     } else {
       setWaiting(false);
     }
@@ -123,7 +134,7 @@ function Game() {
     <div className="game">
       <div className="header">
       {pathingInProgress ? (
-        <div className = "toGenerate">{toGenerate}</div>
+        <Block color={generatedBlock}>{generatedBlock}</Block>
       ) : (
         <div className="score">{score}</div>
       )}
@@ -135,6 +146,14 @@ function Game() {
         onPathChange={onPathChange}
         onDone={onPathDone}
       />
+      <div className = "button">
+        {waiting ?
+          <button class="boostButtonDisabled">Booster</button>
+          :
+          <button class="boostButton" onClick = {toBoost} 
+          disabled={waiting ? true : false}>Booster</button>
+        }
+      </div>
     </div>
   );
 }
