@@ -121,7 +121,7 @@ function Game() {
     if (restRGrids.length > 0) {
       setTimeout(() => {
         animateEffect(restRGrids);
-      }, 100);
+      }, 50);
     } else {
       setWaiting(false);
     }
