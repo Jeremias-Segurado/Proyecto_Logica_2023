@@ -111,6 +111,21 @@ function Game() {
     });
   }
 
+  function helpMaxMoves() {
+    const gridS = JSON.stringify(grid);
+    const queryS = "ayuda_movida_maxima(" + gridS + "," + numOfColumns + ", RPath)";
+    setWaiting(true);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        console.log(response['RPath']);
+        onPathChange(response['RPath']);
+      } else {
+        setWaiting(false);
+      }
+    });
+    setWaiting(false);
+  }
+
   /**
    * Displays each grid of the sequence as the current grid in 1sec intervals.
    * @param {number[][]} rGrids a sequence of grids.
@@ -148,10 +163,22 @@ function Game() {
       />
       <div className = "button">
         {waiting ?
-          <button class="boostButtonDisabled">Booster</button>
+          <button className="boostButtonDisabled">Booster</button>
           :
-          <button class="boostButton" onClick = {toBoost} 
+          <button className="boostButton" onClick = {toBoost} 
           disabled={waiting ? true : false}>Booster</button>
+        }
+        {waiting ?
+          <button className="boostButtonDisabled">Max Move</button>
+          :
+          <button className="boostButton" onClick = {helpMaxMoves} 
+          disabled={waiting ? true : false}>Max Move</button>
+        }
+        {waiting ?
+          <button className="boostButtonDisabled">Adyacent</button>
+          :
+          <button className="boostButton" onClick = {helpMaxMoves} 
+          disabled={waiting ? true : false}>Adyacent</button>
         }
       </div>
     </div>
