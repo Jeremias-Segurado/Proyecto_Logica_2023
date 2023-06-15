@@ -69,8 +69,8 @@ agregar_bloques_nuevos(Grilla, Path, NextPath, NumOfColumns, GridRes):-
     NextPos is H-NumOfColumns,
 	rangoMINPotencia(1, Min),
 	rangoMAXPotencia(1, Max),
-	bloqueRandom(Min, Max, B),
-	remplazar_lista(H, Grilla, B, GridNew),
+	bloque_random(Min, Max, B),
+	reemplazar_lista(H, Grilla, B, GridNew),
 	agregar_bloques_nuevos(GridNew, T, NextPathAux, NumOfColumns, GridRes),
     append([NextPos], NextPathAux, NextPath)
 	;
@@ -79,36 +79,36 @@ agregar_bloques_nuevos(Grilla, Path, NextPath, NumOfColumns, GridRes):-
     append([H], NextPathAux, NextPath).
 
 /**
- * resultadoSuma(+Sum, -Pot).
+ * resultado_suma(+Sum, -Pot).
  * Asocia la menor Potencia necesaria para que el numero Sum sea
  * menor o igual a 2 elevado dicho potencia.
  */ 
-resultadoSuma(Sum, 1) :- Sum=<2, !.
-resultadoSuma(Sum, Pot) :- 
+resultado_suma(Sum, 1) :- Sum=<2, !.
+resultado_suma(Sum, Pot) :- 
         SumAux is Sum/2,
-        resultadoSuma(SumAux, PotAux),
+        resultado_suma(SumAux, PotAux),
         Pot is PotAux + 1,
         Sum =< 2**Pot,
         !.
 
 /**
- * bloqueRandom(+Min, +Max, -Bloque)
+ * bloque_random(+Min, +Max, -Bloque)
  * Retorna una potencia de 2, cuyo exponente se encuentra entre el rango [Min; Max] sin incluir el valor de Max.
  */ 
-bloqueRandom(Min, Max, Bloque):-
+bloque_random(Min, Max, Bloque):-
 	random_between(Min, Max, Pot),
 	Bloque is 2**Pot.
 
 /**
- * remplazar_lista(+Index, ?Lista1, +Elem, ?Lista2)
+ * reemplazar_lista(+Index, ?Lista1, +Elem, ?Lista2)
  * Itera sobre 2 listas desde el primer elemento (posicion 1) hasta N, en esa ubicacion la segunda lista contiene el valor X,
  * para el resto de elementos ambas listas son identicas.
  */ 
-remplazar_lista(1, [_|T], X, [X|T]).
-remplazar_lista(N, [H|T], X, [H|R]):-
+reemplazar_lista(1, [_|T], X, [X|T]).
+reemplazar_lista(N, [H|T], X, [H|R]):-
 	N>1,
 	N1 is N-1,
-	remplazar_lista(N1, T, X, R).
+	reemplazar_lista(N1, T, X, R).
 
 /**
  * generar_desplazamientos(+Grilla1, +Posiciones_a_desplazar, -NextPath, +NumeroDeColumnas -Grilla2)
@@ -124,8 +124,8 @@ generar_desplazamientos(G1, [H|T], NextPath, NumOfColum, G2):-
 	nth1(Sig, G1, ElemSig),
 	ElemSig \== 0,
 	nth1(H, G1, ElemAnt),
-	remplazar_lista(Sig, G1, ElemAnt, G3),
-	remplazar_lista(H, G3, ElemSig, G4),
+	reemplazar_lista(Sig, G1, ElemAnt, G3),
+	reemplazar_lista(H, G3, ElemSig, G4),
 	generar_desplazamientos(G4, T, NextPathAux, NumOfColum, G2),
 	append([Sig], NextPathAux, NextPath),
 	!
@@ -145,7 +145,7 @@ sumar_y_agregar(Grilla, Path, GrillaNueva, NuevoPath, Suma, Puntaje):-
     T \== [],
 	NuevoPath = [H|Z],
 	nth1(H, Grilla, Elem),
-	remplazar_lista(H, Grilla, 0, G2),
+	reemplazar_lista(H, Grilla, 0, G2),
 	SumaAux is Suma+Elem,
 	sumar_y_agregar(G2, T, GrillaNueva, Z, SumaAux, Puntaje),
     !.
@@ -154,14 +154,14 @@ sumar_y_agregar(Grilla, Path, GrillaNueva, [], Suma, Puntaje):-
     T == [],
 	nth1(H, Grilla, Elem),
 	Puntaje is Suma+Elem,
-	resultadoSuma(Puntaje, NuevaPot),
+	resultado_suma(Puntaje, NuevaPot),
     NBloc is 2**NuevaPot, 
-	remplazar_lista(H, Grilla, NBloc, G2),
+	reemplazar_lista(H, Grilla, NBloc, G2),
 	GrillaNueva = G2.
 
 /**
  * siguiente_bloque(+Grilla, +Path, +NumOfColumns, -BloqueResultado)
- * Predicado SHELL que se encarga de mapear el Path combirtiendo las ubicaciones [Fila|Columna] en posiciones dentro de una lista,
+ * Predicado SHELL que se encarga de mapear el Path convirtiendosn las ubicaciones [Fila|Columna] en posiciones dentro de una lista,
  * con primer elemento 1; Luego calcula cual seria la potencia de 2 acorde a la suma de los elementos de la grilla ubicados en las posiciones
  * indicadas por el Path mapeado.
  */ 
@@ -178,7 +178,7 @@ ver_siguiente_bloque(Grilla, [H|T], Suma, BloqueResultado):-
 	T == [],
 	nth1(H, Grilla, Elem),
 	SumaAux is Suma+Elem,
-	resultadoSuma(SumaAux, NuevaPot),
+	resultado_suma(SumaAux, NuevaPot),
 	BloqueResultado is 2**NuevaPot.
 ver_siguiente_bloque(Grilla, Path,Suma, BloqueResultado):-
 	Path = [H|T],
@@ -187,11 +187,11 @@ ver_siguiente_bloque(Grilla, Path,Suma, BloqueResultado):-
 	ver_siguiente_bloque(Grilla, T, SumaAux, BloqueResultado).
  
 /**
- * checkPosition(+Fila, +Columna, +NumOfRows, +NumOfColumns)
+ * check_position(+Fila, +Columna, +NumOfRows, +NumOfColumns)
  * TRUE si la ubicacion (Fila, Columna) corresponde a la de una grilla de primer elemento (0, 0)
  * y con cierta cantidad de filas(NumOfRows) y de columnas(NumOfColumns).
  */ 
-checkPosition(I, J, NumOfRows, NumOfColumns) :-
+check_position(I, J, NumOfRows, NumOfColumns) :-
 	I > 0, J > 0, I =< NumOfRows, J =< NumOfColumns.
 
 /**
@@ -200,7 +200,7 @@ checkPosition(I, J, NumOfRows, NumOfColumns) :-
  * Dichos elementos deben ser iguales.
  */ 
 adyacentes(Grid, NumOfColumns, NumOfRows, X, Y, List) :-
-	checkPosition(X, Y, NumOfRows, NumOfColumns),
+	check_position(X, Y, NumOfRows, NumOfColumns),
 	Pos1 is (X-1) * NumOfColumns + Y,
 	nth1(Pos1, Grid, Elem),
 	findall(Pos, 
@@ -208,7 +208,7 @@ adyacentes(Grid, NumOfColumns, NumOfRows, X, Y, List) :-
 				between(-1, 1, DJStep),
 				XAdj is X + DIStep,
 				YAdj is Y + DJStep,
-				checkPosition(XAdj, YAdj, NumOfRows, NumOfColumns),          
+				check_position(XAdj, YAdj, NumOfRows, NumOfColumns),          
 				Pos is (XAdj-1) * NumOfColumns + YAdj,          
 				nth1(Pos, Grid, Elem2),
 				Elem == Elem2), 
@@ -289,3 +289,91 @@ mapear_path(PathOrigin, NumOfColumns, PathMapeado):-
 	Pos is X * NumOfColumns + Y + 1,
 	mapear_path(T, NumOfColumns, PathAux),
 	append([Pos], PathAux, PathMapeado).
+
+
+
+
+
+
+
+adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, X, Y, List) :-
+	check_position(X, Y, NumOfRows, NumOfColumns),
+	Pos1 is (X-1) * NumOfColumns + Y,
+	nth1(Pos1, Grid, Elem),
+	findall(Pos, 
+				(between(-1, 1, DIStep),
+				between(-1, 1, DJStep),
+				XAdj is X + DIStep,
+				YAdj is Y + DJStep,
+				check_position(XAdj, YAdj, NumOfRows, NumOfColumns),          
+				Pos is (XAdj-1) * NumOfColumns + YAdj,          
+				nth1(Pos, Grid, Elem2),
+				Elem3 is Elem*2,
+				(Elem2 == Elem; Elem2 == Elem3)), 
+			List).
+
+adyacentes_mejor_path(_, [], _, _, _, 0, []).
+adyacentes_mejor_path(Grid, Path, Visitados, NumOfColumns, NumOfRows, Mejor_Suma, RList):-
+	Path = [H|T],
+	not(member(H, Visitados)),
+	append([H],Visitados, Visitados2),
+	PosXAux is H div NumOfColumns,
+	PosYAux is H mod NumOfColumns,
+	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
+	(PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1),
+	adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, PosX, PosY, AdjList),
+	adyacentes_mejor_path(Grid, AdjList, Visitados2, NumOfColumns, NumOfRows, Mejor_Suma_1, RList_1),
+	adyacentes_mejor_path(Grid, T, Visitados2, NumOfColumns, NumOfRows, Mejor_Suma_2, RList_2),
+	nth1(H, Grid, Elem),
+	Suma_H is Elem + Mejor_Suma_1,
+	resultado_suma(Suma_H, Pot_1),
+	resultado_suma(Mejor_Suma_2, Pot_2),
+	(Pot_1 >= Pot_2 -> append([H], RList_1, RList), Mejor_Suma is Suma_H;  
+	RList = RList_2, Mejor_Suma is Mejor_Suma_2)
+	;   
+	Path = [_|T],
+	adyacentes_mejor_path(Grid, T, Visitados, NumOfColumns, NumOfRows, Mejor_Suma, RList).
+
+movida_maxima(Grid, _, _, Index, OldPath, PathResultado) :-
+	length(Grid, Largo),
+	Index > Largo,
+	PathResultado = OldPath.
+movida_maxima(Grid, NumOfColumns, NumOfRows, Index, OldPath, PathResultado) :-
+	PosXAux is Index div NumOfColumns,
+	PosYAux is Index mod NumOfColumns,
+	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
+	(PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1),
+	adyacentes(Grid, NumOfColumns, NumOfRows, PosX, PosY, AdjList),
+	length(AdjList, LargoAdj),
+	LargoAdj > 1,
+	adyacentes_mejor_path(Grid, AdjList, [Index], NumOfColumns, NumOfRows, Mejor_Suma, Nuevo_Path),
+	nth1(Index, Grid, Elem),
+	Suma_Index is Elem + Mejor_Suma,
+	ver_siguiente_bloque(Grid, OldPath, 0, BloqueResultado),
+	resultado_suma(Suma_Index, PotSuma),
+	(2**PotSuma >= BloqueResultado ->   
+		append([Index], Nuevo_Path, Path_Grande),
+		Index_New is Index+1,
+		movida_maxima(Grid, NumOfColumns, NumOfRows, Index_New, Path_Grande, PathResultado)
+		;
+		Index_New is Index+1,
+		movida_maxima(Grid, NumOfColumns, NumOfRows, Index_New, OldPath, PathResultado))
+	;   
+	Index_New is Index+1,
+	movida_maxima(Grid, NumOfColumns, NumOfRows, Index_New, OldPath, PathResultado).
+
+ayuda_movida_maxima(Grid, NumOfColumns, RPath) :-
+	length(Grid, CantElem),
+	NumOfRows is CantElem/NumOfColumns,
+	movida_maxima(Grid, NumOfColumns, NumOfRows, 1, [1], RPathAux),
+	mapear_path_a_coordenadas(RPathAux, NumOfColumns, RPath).
+
+
+mapear_path_a_coordenadas([],_,[]).
+mapear_path_a_coordenadas(IndexPath, NumOfColumns, PathMapeado) :-
+    IndexPath = [H|T],
+    RealIndex is H - 1,
+    PosX is RealIndex div NumOfColumns,
+	PosY is RealIndex mod NumOfColumns,
+    mapear_path_a_coordenadas(T, NumOfColumns, PathMapeadoAux),
+    append([[PosX,PosY]], PathMapeadoAux, PathMapeado).
