@@ -100,17 +100,6 @@ bloque_random(Min, Max, Bloque):-
 	Bloque is 2**Pot.
 
 /**
- * reemplazar_lista(+Index, ?Lista1, +Elem, ?Lista2)
- * Itera sobre 2 listas desde el primer elemento (posicion 1) hasta N, en esa ubicacion la segunda lista contiene el valor X,
- * para el resto de elementos ambas listas son identicas.
- */ 
-reemplazar_lista(1, [_|T], X, [X|T]).
-reemplazar_lista(N, [H|T], X, [H|R]):-
-	N>1,
-	N1 is N-1,
-	reemplazar_lista(N1, T, X, R).
-
-/**
  * generar_desplazamientos(+Grilla1, +Posiciones_a_desplazar, -NextPath, +NumeroDeColumnas -Grilla2)
  * Desplaza los elementos ubicados en las posiciones marcadas por el Path hacia la posicion de la fila de arriba, 
  * si en la posicion siguiente se encuentra el elemento 0 o esta ubicacion excede los limites de la grilla no se 
@@ -186,13 +175,6 @@ ver_siguiente_bloque(Grilla, Path,Suma, BloqueResultado):-
 	SumaAux is Suma+Elem,
 	ver_siguiente_bloque(Grilla, T, SumaAux, BloqueResultado).
  
-/**
- * check_position(+Fila, +Columna, +NumOfRows, +NumOfColumns)
- * TRUE si la ubicacion (Fila, Columna) corresponde a la de una grilla de primer elemento (0, 0)
- * y con cierta cantidad de filas(NumOfRows) y de columnas(NumOfColumns).
- */ 
-check_position(I, J, NumOfRows, NumOfColumns) :-
-	I > 0, J > 0, I =< NumOfRows, J =< NumOfColumns.
 
 /**
  * adyacentes(+Grid, +NumOfColumns, +NumOfRows, +Fila, +Columna, -Lista_de_abyacentes)
@@ -379,16 +361,34 @@ mapear_path_a_coordenadas(IndexPath, NumOfColumns, PathMapeado) :-
 
 
 %---------------boton maximo adyacente------------------------
-/*
-ayuda_maximos_iguales_adyacentes(Grid, NumOfColumns, RPath):-
-	listar_bloques_iguales_mayorAmenor(Grid, 1, RLists),
 
 
+%a checkear
+ayuda_maximos_iguales_adyacentes(Grid, NumOfColumns, RPath):-	
+	getIndexList(Grid, Index, IndexList),
+	bubblesort(L, IndexList, RIndexList, SortedList),
+	crear_listas_iguales(1, SortedList, RIndexList, 2, RListsOfIndex),
+	length(Grid, LongGrid),
+	NumOfRows is LongGrid div NumOfColumns,
+	maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, RListsOfIndex, RPathAux),
+	mapear_path_a_coordenadas(RPathAux, NumOfColumns, RPath),
+	!.
+
+%FUNCA
+maximo_adyacente_shell(_, _, _, [], []).
+maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, ListSortOfLists, RPath):-
+	ListSortOfLists = [List|_],
+	List = [H|_],
+	nth1(H, Grid, Corte),
+	length(List, LargoSublista),
+	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, 1, List, Corte, RPathAux, LargoSublista),
+	length(RPathAux, Largo),
+	Largo > 1,
+	RPath = RPathAux
+	;
+	ListSortOfLists = [_|T],
+	maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, T, RPath).
 	
-listar_bloques_iguales_mayorAmenor(Grid, RLists):-
-	metodo_burbuja(),
-	crear_listas_iguales(0, ListSort, 1, RLists).
-*/
 %FUNCA
 crear_listas_iguales(IndexElemAnt, ListSort, Index, [[IndexElemAnt]]):-
 	length(ListSort, Long),
@@ -440,19 +440,6 @@ simular_gravedad_y_chequear1Elem(Grid, Path, NumOfColumns, IndexElem, Check):-
     ;   %Fallo caso 1
     Check is 1.
     
-
-
-%FUNCA
-acotar_path([], _, _, []).
-acotar_path(Path, NumOfColumns, PosYElem, PathAcotado):-
-	Path = [H|T],
-	acotar_path(T, NumOfColumns, PosYElem, PathAcotadoAux),
-	PosYAux is H mod NumOfColumns,
-	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
-	Distancia is PosYElem - PosY,
-	(Distancia =< 1, Distancia >= -1 -> append([H], PathAcotadoAux, PathAcotado)
-                                       ; PathAcotado = PathAcotadoAux).
-
 
 %check =0 es OK
 %FUNCA
@@ -542,46 +529,40 @@ simular_desplazar(Grid, NumOfColumns, Path, NewGrid, A):-
 	;
 	simular_desplazar(Grid, _, _, NewGrid, 0).
 
-
-
 /*
  * Encuentra un PATHACOTADO en la grilla a partir del PATH(Sin el primer elemento) indicado el cual generaria el bloque igual al CORTE, 
  * Si no existe dicho camino, retorna vacio. 
 */
-%FUNCA +++++++++++++++
-adyacentes_path_acotado(_, [], _, _, _, Sum, A, []):-
-	resultado_suma(Sum, Pot),
-	 ResPot is 2**Pot,
-	 ResPot == A.
- adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList):-
-	 Path = [H|T],
-	 not(member(H, Visitados)),
-	 append([H],Visitados, Visitados2),
-	 PosXAux is H div NumOfColumns,
-	 PosYAux is H mod NumOfColumns,
-	 (PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
-	 (PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1),
-	 nth1(H, Grid, Elem),
-	 SumaAux is Elem + Suma,
-	 resultado_suma(SumaAux, Pot_1),
-	 SigSuma is 2**Pot_1,
-	 SigSuma =< Corte,
-	 adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, PosX, PosY, AdjList),
-	 (adyacentes_path_acotado(Grid, AdjList, Visitados2, NumOfColumns, NumOfRows,  SumaAux, Corte, RList_1)->
-		 append([H], RList_1, RList)
-		 ;
-		 adyacentes_path_acotado(Grid, T, Visitados2, NumOfColumns, NumOfRows, Suma, Corte, RList)),
-	 !
-	 ;  
-	 Suma =< Corte,
-	 Path = [_|T],
-	 adyacentes_path_acotado(Grid, T, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList).
- 
-%SIn TERMINAR
-maximo_adyacente_shell(Grid, NumOfColumns, ListSortOfLists, RPath, Check):-
-	ListSortOfLists = [List|T],
-	List = [H|_].
-	
+%FUNCA +++++++++++++++********
+adyacentes_path_acotado(_, [], _, _, _, _, _, []).
+adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList):-
+	Path = [H|T],
+	not(member(H, Visitados)),
+	append([H],Visitados, Visitados2),
+	PosXAux is H div NumOfColumns,
+	PosYAux is H mod NumOfColumns,
+	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
+	(PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1),
+	nth1(H, Grid, Elem),
+	SumaAux is Elem + Suma,
+	resultado_suma(SumaAux, Pot_1),
+	SigSuma is 2**Pot_1,
+	(SigSuma < Corte ->
+		adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, PosX, PosY, AdjList),
+		(adyacentes_path_acotado(Grid, AdjList, Visitados2, NumOfColumns, NumOfRows,  SumaAux, Corte, RList_1)->
+			(RList_1 \==[] -> append([H], RList_1, RList); RList = [])
+			;
+			adyacentes_path_acotado(Grid, T, Visitados2, NumOfColumns, NumOfRows, Suma, Corte, RList))
+		;
+		SigSuma == Corte,
+		RList = [H]
+	),
+	!
+	;  
+	Suma < Corte,
+	Path = [_|T],
+	adyacentes_path_acotado(Grid, T, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList).
+
 
 /*Recorre la grilla buscando los camnios que generen el bloque igual al CORTE, y retorna el cual genere el bloque adyacente 
  *a la/las posiciones indicadas en ListIndex;
@@ -617,13 +598,17 @@ encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, ListIndex, Corte
 	
 	%findall(RList,(between(1, 9, Index), adyacentes_path_acotado(Grilla, [Index], [], 3, 3, 0, 16, RList)),RLists) 
 
-	/*Asume Index valido
-	*/
-	transformar_indexAcoordenadas(Index, NumOfColumns, Fil, Col):-
-		PosFilAux is Index div NumOfColumns,
-		PosColAux is Index mod NumOfColumns,
-		(PosColAux == 0 -> Col is NumOfColumns; Col is PosColAux ),
-		(PosColAux == 0 -> Fil is PosFilAux; Fil is PosFilAux+1).
+
+%-------------Metodos auxiliares---------------------
+
+
+/*Asume Index valido
+*/
+transformar_indexAcoordenadas(Index, NumOfColumns, Fil, Col):-
+	PosFilAux is Index div NumOfColumns,
+	PosColAux is Index mod NumOfColumns,
+	(PosColAux == 0 -> Col is NumOfColumns; Col is PosColAux ),
+	(PosColAux == 0 -> Fil is PosFilAux; Fil is PosFilAux+1).
 
 bubblesort(L, IndexListAux, IndexList, L1) :-
        	(bubble(L, IndexListAux, IndexList1, L2)
@@ -663,3 +648,33 @@ crear_listas_iguales(IndexElemAnt, ListSort, IndexList, Index, RLists):-
 		crear_listas_iguales(Index, ListSort, IndexList, Index2, RListsAux), 
     	nth1(IndexElemAnt, IndexList, ElemIndex),
 		append([[ElemIndex]], RListsAux, RLists)).
+
+%FUNCA
+acotar_path([], _, _, []).
+acotar_path(Path, NumOfColumns, PosYElem, PathAcotado):-
+	Path = [H|T],
+	acotar_path(T, NumOfColumns, PosYElem, PathAcotadoAux),
+	PosYAux is H mod NumOfColumns,
+	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
+	Distancia is PosYElem - PosY,
+	(Distancia =< 1, Distancia >= -1 -> append([H], PathAcotadoAux, PathAcotado)
+										; PathAcotado = PathAcotadoAux).
+	
+/**
+ * check_position(+Fila, +Columna, +NumOfRows, +NumOfColumns)
+ * TRUE si la ubicacion (Fila, Columna) corresponde a la de una grilla de primer elemento (0, 0)
+ * y con cierta cantidad de filas(NumOfRows) y de columnas(NumOfColumns).
+ */ 
+check_position(I, J, NumOfRows, NumOfColumns) :-
+	I > 0, J > 0, I =< NumOfRows, J =< NumOfColumns.
+
+/**
+ * reemplazar_lista(+Index, ?Lista1, +Elem, ?Lista2)
+ * Itera sobre 2 listas desde el primer elemento (posicion 1) hasta N, en esa ubicacion la segunda lista contiene el valor X,
+ * para el resto de elementos ambas listas son identicas.
+ */ 
+reemplazar_lista(1, [_|T], X, [X|T]).
+reemplazar_lista(N, [H|T], X, [H|R]):-
+	N>1,
+	N1 is N-1,
+	reemplazar_lista(N1, T, X, R).
