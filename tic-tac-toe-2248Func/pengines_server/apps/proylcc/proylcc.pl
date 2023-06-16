@@ -624,3 +624,42 @@ encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, ListIndex, Corte
 		PosColAux is Index mod NumOfColumns,
 		(PosColAux == 0 -> Col is NumOfColumns; Col is PosColAux ),
 		(PosColAux == 0 -> Fil is PosFilAux; Fil is PosFilAux+1).
+
+bubblesort(L, IndexListAux, IndexList, L1) :-
+       	(bubble(L, IndexListAux, IndexList1, L2)
+       	-> bubblesort(L2, IndexList1, IndexList, L1)
+       	; L = L1, IndexListAux = IndexList).
+
+bubble([A,B|T], [X,Y|T1], IndexList, L) :-
+        (A < B
+        -> L = [B,A|T], IndexList = [Y,X|T1]
+        ; L = [A|L1], IndexList = [X|T2],
+        bubble([B|T], [Y|T1], T2, L1)).
+
+getIndexList([], _, []).
+getIndexList(Grid, Index, IndexList) :-
+    Grid = [_ | T],
+    IndexList = [Index | H],
+    IndexNext is Index + 1,
+    getIndexList(T, IndexNext, H) 
+    .
+
+crear_listas_iguales(IndexElemAnt, ListSort, _, Index, [[IndexElemAnt]]):-
+	length(ListSort, Long),
+	Index > Long.
+crear_listas_iguales(IndexElemAnt, ListSort, IndexList, Index, RLists):-
+	nth1(Index, ListSort, Elem),
+    nth1(IndexElemAnt, ListSort, ElemAnt),
+	(ElemAnt == Elem->
+		Index2 is Index + 1,
+		crear_listas_iguales(Index, ListSort, IndexList, Index2, RListsAux),
+		RListsAux = [H|T],
+        nth1(IndexElemAnt, IndexList, ElemIndex),
+		append([ElemIndex], H, SameList),
+		append([SameList], T, RLists),
+    !
+	;
+		Index2 is Index + 1,
+		crear_listas_iguales(Index, ListSort, IndexList, Index2, RListsAux), 
+    	nth1(IndexElemAnt, IndexList, ElemIndex),
+		append([[ElemIndex]], RListsAux, RLists)).
