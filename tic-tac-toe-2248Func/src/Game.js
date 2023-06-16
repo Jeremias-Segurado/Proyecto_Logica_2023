@@ -126,6 +126,21 @@ function Game() {
     setWaiting(false);
   }
 
+  function adyacentMaxMoves() {
+    const gridS = JSON.stringify(grid);
+    const queryS = "ayuda_maximos_iguales_adyacentes(" + gridS + "," + numOfColumns + ", RPath)";
+    setWaiting(true);
+    pengine.query(queryS, (success, response) => {
+      if (success) {
+        console.log(response['RPath']);
+        onPathChange(response['RPath']);
+      } else {
+        setWaiting(false);
+      }
+    });
+    setWaiting(false);
+  }
+
   /**
    * Displays each grid of the sequence as the current grid in 1sec intervals.
    * @param {number[][]} rGrids a sequence of grids.
@@ -177,7 +192,7 @@ function Game() {
         {waiting ?
           <button className="boostButtonDisabled">Adyacent</button>
           :
-          <button className="boostButton" onClick = {helpMaxMoves} 
+          <button className="boostButton" onClick = {adyacentMaxMoves} 
           disabled={waiting ? true : false}>Adyacent</button>
         }
       </div>
