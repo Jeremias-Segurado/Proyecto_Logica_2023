@@ -272,9 +272,10 @@ mapear_path(PathOrigin, NumOfColumns, PathMapeado):-
 	mapear_path(T, NumOfColumns, PathAux),
 	append([Pos], PathAux, PathMapeado).
 
-
-%-----------------------Boton max camino-------------------------------------
-
+/**
+ * adyacentes_mayores_o_iguales(+Grid, +NumOfColumns, +NumOfRows, +X, +Y, -List)
+ * Devuelve los elementos adyacentes que son mayores o iguales a una posición de la grilla.
+ */
 adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, X, Y, List) :-
 	check_position(X, Y, NumOfRows, NumOfColumns),
 	Pos1 is (X-1) * NumOfColumns + Y,
@@ -291,6 +292,10 @@ adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, X, Y, List) :-
 				(Elem2 == Elem; Elem2 == Elem3)), 
 			List).
 
+/**
+ * adyacentes_mejor_path(+Grid, +Path, +Visitados, +NumOfColumns, +NumOfRows, -Mejor_Suma, -RList)
+ * Devuelve el mejor camino válido (es decir, el que genera el bloque mas grande) a partir de un path ya existente.
+ */
 adyacentes_mejor_path(_, [], _, _, _, 0, []).
 adyacentes_mejor_path(Grid, Path, Visitados, NumOfColumns, NumOfRows, Mejor_Suma, RList):-
 	Path = [H|T],
@@ -313,6 +318,10 @@ adyacentes_mejor_path(Grid, Path, Visitados, NumOfColumns, NumOfRows, Mejor_Suma
 	Path = [_|T],
 	adyacentes_mejor_path(Grid, T, Visitados, NumOfColumns, NumOfRows, Mejor_Suma, RList).
 
+/**
+ * movida_maxima(+Grid, +NumOfColumns, +NumOfRows, +Index, +OldPath, -PathResultado)
+ * Cicla por toda la grilla buscando el mayor path, esto es, el que genere el bloque más grande.
+ */
 movida_maxima(Grid, _, _, Index, OldPath, PathResultado) :-
 	length(Grid, Largo),
 	Index > Largo,
@@ -328,7 +337,7 @@ movida_maxima(Grid, NumOfColumns, NumOfRows, Index, OldPath, PathResultado) :-
 	adyacentes_mejor_path(Grid, AdjList, [Index], NumOfColumns, NumOfRows, Mejor_Suma, Nuevo_Path),
 	nth1(Index, Grid, Elem),
 	Suma_Index is Elem + Mejor_Suma,
-	ver_siguiente_bloque(Grid, OldPath, 0, BloqueResultado),
+	(OldPath == [] -> BloqueResultado is 0; ver_siguiente_bloque(Grid, OldPath, 0, BloqueResultado)),
 	resultado_suma(Suma_Index, PotSuma),
 	(2**PotSuma >= BloqueResultado ->   
 		append([Index], Nuevo_Path, Path_Grande),
@@ -341,13 +350,21 @@ movida_maxima(Grid, NumOfColumns, NumOfRows, Index, OldPath, PathResultado) :-
 	Index_New is Index+1,
 	movida_maxima(Grid, NumOfColumns, NumOfRows, Index_New, OldPath, PathResultado).
 
+/**
+ * ayuda_movida_maxima(+Grid, +NumOfColumns, -RPath)
+ * Devuelve el camino que genera el mayor bloque.
+ */
 ayuda_movida_maxima(Grid, NumOfColumns, RPath) :-
 	length(Grid, CantElem),
 	NumOfRows is CantElem/NumOfColumns,
-	movida_maxima(Grid, NumOfColumns, NumOfRows, 1, [1], RPathAux),
+	movida_maxima(Grid, NumOfColumns, NumOfRows, 1, [], RPathAux),
 	mapear_path_a_coordenadas(RPathAux, NumOfColumns, RPath).
 
-
+/**
+ * mapear_path_a_coordenadas(+IndexPath, +NumOfColumns, -PathMapeado)
+ * Recibe un path de indices (que corresponden a posiciones en la grid), y los mapea a una lista con
+ * coordenadas [X,Y].
+ */
 mapear_path_a_coordenadas([],_,[]).
 mapear_path_a_coordenadas(IndexPath, NumOfColumns, PathMapeado) :-
     IndexPath = [H|T],
@@ -357,14 +374,12 @@ mapear_path_a_coordenadas(IndexPath, NumOfColumns, PathMapeado) :-
     mapear_path_a_coordenadas(T, NumOfColumns, PathMapeadoAux),
     append([[PosX,PosY]], PathMapeadoAux, PathMapeado).
 
-%-------------------------------------------------------------
-
-
-%---------------boton maximo adyacente------------------------
-
-%FUNCA
+/**
+ * ayuda_maximos_iguales_adyacentes(+Grid, +NumOfColumns, -RPath)
+ * Devuelve el camino que genera el número más grande ADYACENTE a otro igual preexistente.
+ */
 ayuda_maximos_iguales_adyacentes(Grid, NumOfColumns, RPath):-	
-	getIndexList(Grid, 1, IndexList),
+	generar_lista_de_indices(Grid, 1, IndexList),
 	bubblesort(Grid, IndexList, RIndexList, SortedList),
 	crear_listas_iguales(1, SortedList, RIndexList, 2, RListsOfIndex),
 	length(Grid, LongGrid),
@@ -373,7 +388,11 @@ ayuda_maximos_iguales_adyacentes(Grid, NumOfColumns, RPath):-
 	mapear_path_a_coordenadas(RPathAux, NumOfColumns, RPath),
     !.
 
-%FUNCA
+/**
+ * maximo_adyacente_shell(+Grid, +NumOfColumns, +NumOfRows, +ListSortOfLists, -RPath)
+ * Método cáscara que cicla por toda la lista ordenada de índices (que guarda cada bloque de mayor a menor).
+ * Devuelve el mayor camino adyacente posible.
+ */
 maximo_adyacente_shell(_, _, _, [], []).
 maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, ListSortOfLists, RPath):-
 	ListSortOfLists = [List|_],
@@ -388,7 +407,10 @@ maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, ListSortOfLists, RPath):-
 	ListSortOfLists = [_|T],
 	maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, T, RPath).
 	
-%FUNCA
+/**
+ * crear_listas_iguales(+IndexElemAnt, +ListSort, +Index, -RLists)
+ * Genera una lista de listas, las cuales estan formadas por las posiciones de los bloques de valor igual.
+ */
 crear_listas_iguales(IndexElemAnt, ListSort, Index, [[IndexElemAnt]]):-
 	length(ListSort, Long),
 	Index > Long.
@@ -406,11 +428,12 @@ crear_listas_iguales(IndexElemAnt, ListSort, Index, RLists):-
 		crear_listas_iguales(Index, ListSort, Index2, RListsAux),        		
 		append([[IndexElemAnt]], RListsAux, RLists)).
 
-%Corrobora que luego de aplicar la gravedad en un espacio acotad(columnas a 1 de distancia)
-%la ultima posicion del Path este a distancia 1 del bloque. 
-%Si check es 0 entonces se encontro camino, sino no es correcto el camino.
-%FUNCA
-simular_gravedad_y_chequear1Elem(Grid, Path, NumOfColumns, IndexElem, Check):-
+/**
+ * Corrobora que luego de aplicar la gravedad en un espacio acotadado(columnas a 1 de distancia)
+ * la ultima posicion del Path este a distancia 1 del bloque. 
+ * Si check es 0 entonces se encontro camino, sino no es correcto el camino.
+ */
+simular_gravedad_y_chequear_con_un_elemento(Grid, Path, NumOfColumns, IndexElem, Check):-
     last(Path, Index_NewBlock),
     length(Grid, Long),
     NumOfRows is Long div NumOfColumns,
@@ -422,7 +445,7 @@ simular_gravedad_y_chequear1Elem(Grid, Path, NumOfColumns, IndexElem, Check):-
 	Distancia is PosYNBlock - PosYElem,
     Distancia >= -1,
     Distancia =< 1,
-    %caso 2, checkear en gravedad acotada
+    %caso 2, chequea en gravedad acotada
     sumar_y_agregar(Grid, Path, Grilla0, Path0, 0, _), 
 	acotar_path(Path0, NumOfColumns, PosYElem, PathAcotado), 
 	length(PathAcotado, LongAcotado),
@@ -440,9 +463,13 @@ simular_gravedad_y_chequear1Elem(Grid, Path, NumOfColumns, IndexElem, Check):-
     Check is 1.
     
 
-%check =0 es OK
-%FUNCA
-simular_gravedad_y_chekearElems(Grid, Path, NumOfColumns, NumOfRows, ListIndex, Check) :-
+/**
+ * simular_gravedad_y_chequear_elementos(+Grid, +Path, +NumOfColumns, +NumOfRows, +ListIndex, -Check)
+ * Corrobora que luego de aplicar la gravedad en toda la grilla, si existe un path cuya
+ * última posición sea adyacente e igual al bloque. 
+ * Si check es 0 entonces se encontro camino, sino no es correcto el camino.
+ */
+simular_gravedad_y_chequear_elementos(Grid, Path, NumOfColumns, NumOfRows, ListIndex, Check) :-
     last(Path, IndexPos),
     sumar_y_agregar(Grid, Path, Grilla0, NewPath, 0, _),
     simular_desplazar(Grilla0, NumOfColumns, NewPath, GridDes, 1),
@@ -453,7 +480,11 @@ simular_gravedad_y_chekearElems(Grid, Path, NumOfColumns, NumOfRows, ListIndex, 
     .
 
 
-%FUNCA
+/**
+ * es_adyacente(+Index1, +Index2, +NumOfColumns, -Check)
+ * Devuelve 0 si la posición en el Index1 es adyacente al bloque en la posición en el Index2.
+ * Caso contrario devuelve 1. 
+ */
 es_adyacente(Index1, Index2, NumOfColumns, Check):-
     PosFilAux is Index1 div NumOfColumns,
 	PosColAux is Index1 mod NumOfColumns,
@@ -473,7 +504,12 @@ es_adyacente(Index1, Index2, NumOfColumns, Check):-
     !
     ;   
     Check is 1.
-%FUNCA
+
+/**
+ * chequear_adyacencias(+Grid, +NumOfColumns, +NumOfRows, +ListIndex, +IndexElem, -Check)
+ * Chequea si existen elementos adyacentes iguales al elemento en IndexElem.
+ * Retorna 0 si se encuentran, caso contrario retorna 1.
+ */
 chequear_adyacencias(_, _, _, [], _, 1).
 chequear_adyacencias(Grid, NumOfColumns, NumOfRows, ListIndex, IndexElem, Check) :-
     ListIndex = [H|_],
@@ -491,34 +527,46 @@ chequear_adyacencias(Grid, NumOfColumns, NumOfRows, ListIndex, IndexElem, Check)
     .
                  
                  
-%FUNCA
+/**
+ * obtener_indices_nuevos(+Grid, +[Index|T], +NumOfColumns, +NumOfRows, -NewListIndex)
+ * Devuelve una lista con los indices nuevos de los elementos pasados por parámetros una vez aplicada la gravedad.
+ */
 obtener_indices_nuevos(_, [], _, _, []).
 obtener_indices_nuevos(Grid, [Index|T], NumOfColumns, NumOfRows, NewListIndex) :-
     PosXAux is Index div NumOfColumns,
 	PosYAux is Index mod NumOfColumns,
 	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
 	(PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1), 
-    contarCeros(Grid, NumOfColumns, NumOfRows, 0, PosX, PosY, NewFil),
+    contar_ceros(Grid, NumOfColumns, NumOfRows, 0, PosX, PosY, NewFil),
     IndexPos is (NewFil-1)*NumOfColumns + PosY,
     obtener_indices_nuevos(Grid, T, NumOfColumns, NumOfRows, NewListIndexAux),
     append([IndexPos], NewListIndexAux, NewListIndex),
     !.
-%FUNCA
-contarCeros(_, _, NumOfRows, Index, Fil, _, Fil) :-
+
+/**
+ * contar_ceros(+Grid, +NumOfColumns, +NumOfRows, +Index, +Fil, +Col, -NewFil)
+ * Método que se encarga de contar los ceros arriba de una posición una vez aplicada la gravedad en la grilla.
+ * El resultado es la nueva fila que ocupará el elemento.
+ */
+contar_ceros(_, _, NumOfRows, Index, Fil, _, Fil) :-
     Check is Fil+Index,
     Check > NumOfRows.
-contarCeros(Grid, NumOfColumns, NumOfRows, Index, Fil, Col, NewFil) :-
+contar_ceros(Grid, NumOfColumns, NumOfRows, Index, Fil, Col, NewFil) :-
 	IndexPos is (Fil+Index-1)*NumOfColumns + Col,
     nth1(IndexPos, Grid, Elem),
     Elem == 0,
     IndexAux is Index + 1,
-    contarCeros(Grid, NumOfColumns, NumOfRows, IndexAux, Fil, Col, NewFilAux),
+    contar_ceros(Grid, NumOfColumns, NumOfRows, IndexAux, Fil, Col, NewFilAux),
     NewFil is NewFilAux + 1
     ;  
     IndexAux is Index + 1,
-    contarCeros(Grid, NumOfColumns, NumOfRows, IndexAux, Fil, Col, NewFil).
+    contar_ceros(Grid, NumOfColumns, NumOfRows, IndexAux, Fil, Col, NewFil).
     
-%FUNCA
+/**
+ * simular_desplazar(+Grid, +NumOfColumns, +Path, -NewGrid, ?A)
+ * Simula el desplazamiento para un determinado Path.
+ * El método utiliza una variable de corte A.
+ */
 simular_desplazar(G, _, _, G, 0).
 simular_desplazar(Grid, NumOfColumns, Path, NewGrid, A):-    
 	generar_desplazamientos(Grid, Path, NextPath2, NumOfColumns, GridDes),
@@ -529,10 +577,9 @@ simular_desplazar(Grid, NumOfColumns, Path, NewGrid, A):-
 	simular_desplazar(Grid, _, _, NewGrid, 0).
 
 /*
- * Encuentra un PATHACOTADO en la grilla a partir del PATH(Sin el primer elemento) indicado el cual generaria el bloque igual al CORTE, 
+ * Encuentra un path acotado en la grilla a partir del path (Sin el primer elemento) indicado el cual generaria el bloque igual al CORTE, 
  * Si no existe dicho camino, retorna vacio. 
 */
-%FUNCA +++++++++++++++********
 adyacentes_path_acotado(_, [], _, _, _, _, _, []).
 adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList):-
 	Path = [H|T],
@@ -563,17 +610,17 @@ adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Co
 	adyacentes_path_acotado(Grid, T, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList).
 
 
-/*Recorre la grilla buscando los camnios que generen el bloque igual al CORTE, y retorna el cual genere el bloque adyacente 
- *a la/las posiciones indicadas en ListIndex;
- *Retorna vacio si no encontro un camino.
+/*
+ * Recorre la grilla buscando los camnios que generen el bloque igual al CORTE, y retorna el cual genere el bloque adyacente 
+ * a la/las posiciones indicadas en ListIndex.
+ * Retorna vacio si no encontro un camino.
 */
-%FUNCA
 encontrar_caminos_acotado(Grid, _, _, Index, _, _, [], _):-
 	length(Grid, Largo),
 	Index > Largo,
     !.
 encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, ListIndex, Corte, RPath, LargoSublista):-
-	transformar_indexAcoordenadas(Index, NumOfColumns, PosFil, PosCol),
+	transformar_indices_a_coordenadas(Index, NumOfColumns, PosFil, PosCol),
 	nth1(Index, Grid, Elem),
 	adyacentes(Grid, NumOfColumns, NumOfRows, PosFil, PosCol, ListaIguales),
 	length(ListaIguales, LargoAdj),
@@ -585,30 +632,34 @@ encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, ListIndex, Corte
 	%Checks
 	(LargoSublista==1->
 		ListIndex = [H|_],
-		simular_gravedad_y_chequear1Elem(Grid, Path, NumOfColumns, H, CheckAux)
+		simular_gravedad_y_chequear_con_un_elemento(Grid, Path, NumOfColumns, H, CheckAux)
 		;
-		simular_gravedad_y_chekearElems(Grid, Path, NumOfColumns, NumOfRows, ListIndex, CheckAux)),
+		simular_gravedad_y_chequear_elementos(Grid, Path, NumOfColumns, NumOfRows, ListIndex, CheckAux)),
 	CheckAux == 0,
 	RPath = Path,		
 	!
 	;
 	Index2 is Index + 1,
 	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index2, ListIndex, Corte, RPath, LargoSublista).
-	
-	%findall(RList,(between(1, 9, Index), adyacentes_path_acotado(Grilla, [Index], [], 3, 3, 0, 16, RList)),RLists) 
+
+/**
+ * MÉTODOS AUXILIARES.
+ */
 
 
-%-------------Metodos auxiliares---------------------
-
-
-/*Asume Index valido
+/**
+ * Mapea un índice a coordenadas.
+ * Asume Index valido.
 */
-transformar_indexAcoordenadas(Index, NumOfColumns, Fil, Col):-
+transformar_indices_a_coordenadas(Index, NumOfColumns, Fil, Col):-
 	PosFilAux is Index div NumOfColumns,
 	PosColAux is Index mod NumOfColumns,
 	(PosColAux == 0 -> Col is NumOfColumns; Col is PosColAux ),
 	(PosColAux == 0 -> Fil is PosFilAux; Fil is PosFilAux+1).
 
+/**
+ * Método de ordenamiento burbuja-
+ */
 bubblesort(L, IndexListAux, IndexList, L1) :-
        	(bubble(L, IndexListAux, IndexList1, L2)
        	-> bubblesort(L2, IndexList1, IndexList, L1)
@@ -620,14 +671,23 @@ bubble([A,B|T], [X,Y|T1], IndexList, L) :-
         ; L = [A|L1], IndexList = [X|T2],
         bubble([B|T], [Y|T1], T2, L1)).
 
-getIndexList([], _, []).
-getIndexList(Grid, Index, IndexList) :-
+
+/**
+ * Genera una lista de índices de la grilla.
+ */
+generar_lista_de_indices([], _, []).
+generar_lista_de_indices(Grid, Index, IndexList) :-
     Grid = [_ | T],
     IndexList = [Index | H],
     IndexNext is Index + 1,
-    getIndexList(T, IndexNext, H) 
+    generar_lista_de_indices(T, IndexNext, H) 
     .
 
+/**
+ * Crea una lista de listas, en donde cada elemento igual se agrupa en una de ellas.
+ * Además, recibe una lista ordenada de mayor a menor de ÍNDICES DE BLOQUES.
+ * La lista devuelta va a ser una lista ordenada de listas, en donde cada una tendrá los índices de los bloques iguales.
+ */
 crear_listas_iguales(IndexElemAnt, ListSort, _, Index, [[IndexElemAnt]]):-
 	length(ListSort, Long),
 	Index > Long.
@@ -648,7 +708,9 @@ crear_listas_iguales(IndexElemAnt, ListSort, IndexList, Index, RLists):-
     	nth1(IndexElemAnt, IndexList, ElemIndex),
 		append([[ElemIndex]], RListsAux, RLists)).
 
-%FUNCA
+/**
+ * Se encarga de acotar el path, dejando únicamente los elementos que se encuentren a distancia 1 en columnas.
+ */
 acotar_path([], _, _, []).
 acotar_path(Path, NumOfColumns, PosYElem, PathAcotado):-
 	Path = [H|T],
