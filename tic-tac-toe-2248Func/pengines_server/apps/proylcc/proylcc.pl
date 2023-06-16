@@ -187,13 +187,8 @@ ver_siguiente_bloque(Grilla, Path,Suma, BloqueResultado):-
 	ver_siguiente_bloque(Grilla, T, SumaAux, BloqueResultado).
  
 /**
-<<<<<<< HEAD
- * checkPosition(+Fila, +Columna, +NumOfRows, +NumOfColumns)
- * TRUE si la ubicacion (Fila, Columna) corresponde a la de una grilla de primer elemento (1, 1)
-=======
  * check_position(+Fila, +Columna, +NumOfRows, +NumOfColumns)
  * TRUE si la ubicacion (Fila, Columna) corresponde a la de una grilla de primer elemento (0, 0)
->>>>>>> 3dea4b4a1120b3236d77d9ce1c2acadf9a28390c
  * y con cierta cantidad de filas(NumOfRows) y de columnas(NumOfColumns).
  */ 
 check_position(I, J, NumOfRows, NumOfColumns) :-
@@ -578,5 +573,31 @@ adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Co
     Path = [_|T],
 	adyacentes_path_acotado(Grid, T, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList).
 
-
+maximo_adyacente_shell(Grid, NumOfColumns, ListSortOfLists, RPath, Check):-
+	ListSortOfLists = [List|T],
+	List = [H|_],
+	
+%A checkear
+encontrar_caminos_acotado(Grid, _, _, Index, _, []):-
+	length(Grid, Largo),
+	Index > Largo.
+encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, Corte, ListOfPath):-
+	PosFilAux is Index div NumOfColumns,
+	PosColAux is Index mod NumOfColumns,
+	(PosColAux == 0 -> PosCol is NumOfColumns; PosCol is PosColAux ),
+	(PosColAux == 0 -> PosFil is PosFilAux; PosFil is PosFilAux+1),
+	nth1(Index, Grid, Elem),
+	adyacentes(Grid, NumOfColumns, NumOfRows, PosFil, PosCol, ListaIguales),
+	length(AdjList, LargoAdj),
+	LargoAdj > 1,
+	adyacentes_path_acotado(Grid, ListaIguales, [Index], NumOfColumns, NumOfRows, Elem, Corte, RList),
+	Index2 is Index + 1,
+	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index2, Corte, ListOfPathAux),
+	append([Index], RList, Path),
+	append([Path], ListOfPathAux, ListOfPath),
+	!
+	;
+	Index2 is Index + 1,
+	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index2, Corte, ListOfPath).
+	
 	%findall(RList,(between(1, 9, Index), adyacentes_path_acotado(Grilla, [Index], [], 3, 3, 0, 16, RList)),RLists) 
