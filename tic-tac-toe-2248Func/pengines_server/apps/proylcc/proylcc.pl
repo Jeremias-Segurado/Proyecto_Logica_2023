@@ -456,10 +456,8 @@ acotar_path(Path, NumOfColumns, PosYElem, PathAcotado):-
 
 %check =0 es OK
 %FUNCA
-simular_gravedad_y_chekearElems(Grid, Path, NumOfColumns, ListIndex, Check) :-
+simular_gravedad_y_chekearElems(Grid, Path, NumOfColumns, NumOfRows, ListIndex, Check) :-
     last(Path, IndexPos),
-    length(Grid, Long),
-    NumOfRows is Long div NumOfColumns,
     sumar_y_agregar(Grid, Path, Grilla0, NewPath, 0, _),
     simular_desplazar(Grilla0, NumOfColumns, NewPath, GridDes, 1),
     obtener_indices_nuevos(Grilla0, ListIndex, NumOfColumns, NumOfRows, NewListIndex),
@@ -545,59 +543,84 @@ simular_desplazar(Grid, NumOfColumns, Path, NewGrid, A):-
 	simular_desplazar(Grid, _, _, NewGrid, 0).
 
 
-%FUNCA
-adyacentes_path_acotado(_, [], _, _, _, A, A, []).
-adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList):-
-	Path = [H|T],
-	not(member(H, Visitados)),
-	append([H],Visitados, Visitados2),
-	PosXAux is H div NumOfColumns,
-	PosYAux is H mod NumOfColumns,
-	(PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
-	(PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1),
-	nth1(H, Grid, Elem),
-	SumaAux is Elem + Suma,
-	resultado_suma(SumaAux, Pot_1),
-	SigSuma is 2**Pot_1,
-	SigSuma =< Corte,
-	adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, PosX, PosY, AdjList),
-	(adyacentes_path_acotado(Grid, AdjList, Visitados2, NumOfColumns, NumOfRows,  SigSuma, Corte, RList_1)->
-		append([H], RList_1, RList)
-		;
-		(adyacentes_path_acotado(Grid, T, Visitados2, NumOfColumns, NumOfRows, Suma, Corte, RList_2)->
-			append([H], RList_2, RList))
-	),
-    !
-	;  
-	Suma =< Corte,
-    Path = [_|T],
-	adyacentes_path_acotado(Grid, T, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList).
 
+/*
+ * Encuentra un PATHACOTADO en la grilla a partir del PATH(Sin el primer elemento) indicado el cual generaria el bloque igual al CORTE, 
+ * Si no existe dicho camino, retorna vacio. 
+*/
+%FUNCA +++++++++++++++
+adyacentes_path_acotado(_, [], _, _, _, Sum, A, []):-
+	resultado_suma(Sum, Pot),
+	 ResPot is 2**Pot,
+	 ResPot == A.
+ adyacentes_path_acotado(Grid, Path, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList):-
+	 Path = [H|T],
+	 not(member(H, Visitados)),
+	 append([H],Visitados, Visitados2),
+	 PosXAux is H div NumOfColumns,
+	 PosYAux is H mod NumOfColumns,
+	 (PosYAux == 0 -> PosY is NumOfColumns; PosY is PosYAux ),
+	 (PosYAux == 0 -> PosX is PosXAux; PosX is PosXAux+1),
+	 nth1(H, Grid, Elem),
+	 SumaAux is Elem + Suma,
+	 resultado_suma(SumaAux, Pot_1),
+	 SigSuma is 2**Pot_1,
+	 SigSuma =< Corte,
+	 adyacentes_mayores_o_iguales(Grid, NumOfColumns, NumOfRows, PosX, PosY, AdjList),
+	 (adyacentes_path_acotado(Grid, AdjList, Visitados2, NumOfColumns, NumOfRows,  SumaAux, Corte, RList_1)->
+		 append([H], RList_1, RList)
+		 ;
+		 adyacentes_path_acotado(Grid, T, Visitados2, NumOfColumns, NumOfRows, Suma, Corte, RList)),
+	 !
+	 ;  
+	 Suma =< Corte,
+	 Path = [_|T],
+	 adyacentes_path_acotado(Grid, T, Visitados, NumOfColumns, NumOfRows, Suma, Corte, RList).
+ 
+%SIn TERMINAR
 maximo_adyacente_shell(Grid, NumOfColumns, ListSortOfLists, RPath, Check):-
 	ListSortOfLists = [List|T],
-	List = [H|_],
+	List = [H|_].
 	
-%A checkear
-encontrar_caminos_acotado(Grid, _, _, Index, _, []):-
+
+/*Recorre la grilla buscando los camnios que generen el bloque igual al CORTE, y retorna el cual genere el bloque adyacente 
+ *a la/las posiciones indicadas en ListIndex;
+ *Retorna vacio si no encontro un camino.
+*/
+%FUNCA
+encontrar_caminos_acotado(Grid, _, _, Index, _, _, [], _):-
 	length(Grid, Largo),
-	Index > Largo.
-encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, Corte, ListOfPath):-
-	PosFilAux is Index div NumOfColumns,
-	PosColAux is Index mod NumOfColumns,
-	(PosColAux == 0 -> PosCol is NumOfColumns; PosCol is PosColAux ),
-	(PosColAux == 0 -> PosFil is PosFilAux; PosFil is PosFilAux+1),
+	Index > Largo,
+    !.
+encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index, ListIndex, Corte, RPath, LargoSublista):-
+	transformar_indexAcoordenadas(Index, NumOfColumns, PosFil, PosCol),
 	nth1(Index, Grid, Elem),
 	adyacentes(Grid, NumOfColumns, NumOfRows, PosFil, PosCol, ListaIguales),
-	length(AdjList, LargoAdj),
+	length(ListaIguales, LargoAdj),
 	LargoAdj > 1,
 	adyacentes_path_acotado(Grid, ListaIguales, [Index], NumOfColumns, NumOfRows, Elem, Corte, RList),
-	Index2 is Index + 1,
-	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index2, Corte, ListOfPathAux),
+	length(RList, LargoPath),
+	LargoPath \== 0,
 	append([Index], RList, Path),
-	append([Path], ListOfPathAux, ListOfPath),
+	%Checks
+	(LargoSublista==1->
+		ListIndex = [H|_],
+		simular_gravedad_y_chequear1Elem(Grid, Path, NumOfColumns, H, CheckAux)
+		;
+		simular_gravedad_y_chekearElems(Grid, Path, NumOfColumns, NumOfRows, ListIndex, CheckAux)),
+	CheckAux == 0,
+	RPath = Path,		
 	!
 	;
 	Index2 is Index + 1,
-	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index2, Corte, ListOfPath).
+	encontrar_caminos_acotado(Grid, NumOfColumns, NumOfRows, Index2, ListIndex, Corte, RPath, LargoSublista).
 	
 	%findall(RList,(between(1, 9, Index), adyacentes_path_acotado(Grilla, [Index], [], 3, 3, 0, 16, RList)),RLists) 
+
+	/*Asume Index valido
+	*/
+	transformar_indexAcoordenadas(Index, NumOfColumns, Fil, Col):-
+		PosFilAux is Index div NumOfColumns,
+		PosColAux is Index mod NumOfColumns,
+		(PosColAux == 0 -> Col is NumOfColumns; Col is PosColAux ),
+		(PosColAux == 0 -> Fil is PosFilAux; Fil is PosFilAux+1).
