@@ -362,17 +362,16 @@ mapear_path_a_coordenadas(IndexPath, NumOfColumns, PathMapeado) :-
 
 %---------------boton maximo adyacente------------------------
 
-
-%a checkear
+%FUNCA
 ayuda_maximos_iguales_adyacentes(Grid, NumOfColumns, RPath):-	
-	getIndexList(Grid, Index, IndexList),
-	bubblesort(L, IndexList, RIndexList, SortedList),
+	getIndexList(Grid, 1, IndexList),
+	bubblesort(Grid, IndexList, RIndexList, SortedList),
 	crear_listas_iguales(1, SortedList, RIndexList, 2, RListsOfIndex),
 	length(Grid, LongGrid),
 	NumOfRows is LongGrid div NumOfColumns,
 	maximo_adyacente_shell(Grid, NumOfColumns, NumOfRows, RListsOfIndex, RPathAux),
 	mapear_path_a_coordenadas(RPathAux, NumOfColumns, RPath),
-	!.
+    !.
 
 %FUNCA
 maximo_adyacente_shell(_, _, _, [], []).
